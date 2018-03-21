@@ -1,0 +1,7 @@
+*.hex
+*.bak
+*.wlf
+*.mif
+*.mpf
+*.mti
+work/
