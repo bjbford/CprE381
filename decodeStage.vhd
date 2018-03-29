@@ -23,8 +23,7 @@ entity decodeStage is
   port(clk	    	: in std_logic;
        RST	    	: in std_logic;
        RegWrite     	: in std_logic;
-       RegDst     	: in std_logic;
-       Link		: in std_logic;
+       WriteReg		: in std_logic_vector(4 downto 0);
        WriteData    	: in std_logic_vector(31 downto 0);
        instruction    	: in std_logic_vector(31 downto 0);
        Add4In    	: in std_logic_vector(31 downto 0);
@@ -36,6 +35,8 @@ entity decodeStage is
        DatatoPC		: out std_logic_vector(31 downto 0);
        Special		: out std_logic;
        Add4Out    	: out std_logic_vector(31 downto 0);
+       instruct20_16	: out std_logic_vector(4 downto 0);
+       instruct15_11	: out std_logic_vector(4 downto 0);
        instruct5_0    	: out std_logic_vector(5 downto 0);
        controlOut	: out std_logic_vector(4 downto 0));
 end decodeStage;
@@ -106,19 +107,18 @@ end component;
 
 signal sAdd4,sRt,sRs,sImmed,sBranchAdd,sBranchMux,sBranchShift,sJump,sJumpMux : std_logic_vector(31 downto 0);
 signal instruct15_0 : std_logic_vector(15 downto 0);
-signal instruct31_26,sALUOP,sinstruct5_0 : std_logic_vector(5 downto 0);
-signal instruct25_21,instruct20_16,instruct15_11,sWrite,sWriteReg,reg31 : std_logic_vector(4 downto 0);
+signal instruct31_26,sinstruct5_0 : std_logic_vector(5 downto 0);
+signal instruct25_21,sinstruct20_16,sinstruct15_11 : std_logic_vector(4 downto 0);
 signal JumpControl,JumpRetControl,sBranch,sCarryIn,sNotZero,Zero,sZeroMux,BranchControl,BneControl,sBranchOR : std_logic;
 
 begin 
   instruct31_26 <= instruction(31 downto 26);
   instruct25_21 <= instruction(25 downto 21);
-  instruct20_16 <= instruction(20 downto 16);
-  instruct15_11 <= instruction(15 downto 11);
+  sinstruct20_16 <= instruction(20 downto 16);
+  sinstruct15_11 <= instruction(15 downto 11);
   instruct15_0 <= instruction(15 downto 0);
   shamt <= instruction(10 downto 6);
   sinstruct5_0 <= instruction(5 downto 0);
-  reg31 <= "11111";
   sAdd4 <= Add4In;
   Add4Out <= sAdd4;
   sBranchOR <= BranchControl OR BneControl;
@@ -146,11 +146,11 @@ begin
   adder_branch: fulladderNbit port map(sCarryIn,sAdd4,sBranchShift,sBranchAdd,open,open,open);
   zero_mux: mux2to1 port map(Zero,sNotZero,BneControl,sZeroMux);
 
-  WrReg_mux: mux2to15bit port map(instruct20_16,instruct15_11,RegDst,sWrite);
-  link_writeReg: mux2to15bit port map(sWrite,reg31,Link,sWriteReg);
-  regs: mipsRegister port map(WriteData,instruct20_16,instruct25_21,sWriteReg,clk,RST,RegWrite,sRs,sRt);
+  regs: mipsRegister port map(WriteData,sinstruct20_16,instruct25_21,WriteReg,clk,RST,RegWrite,sRs,sRt);
 
   mips_signextend: mips_extender port map(instruct15_0,sImmed);
+  instruct20_16 <= sinstruct20_16;
+  instruct15_11 <= sinstruct15_11;
   instruct5_0 <= sinstruct5_0;
   Immed <= sImmed;
   Rs_Data <= sRs;

@@ -27,6 +27,8 @@ entity pipeIDEX is
        ImmedIn			: in std_logic_vector(31 downto 0);
        ALUOpIn			: in std_logic_vector(5 downto 0);
        shamtIn			: in std_logic_vector(4 downto 0);
+       instruct20_16In		: in std_logic_vector(4 downto 0);
+       instruct15_11In		: in std_logic_vector(4 downto 0);
        instruct5_0In		: in std_logic_vector(5 downto 0);
        controlIn		: in std_logic_vector(4 downto 0);
        add4DataOut		: out std_logic_vector(31 downto 0);
@@ -35,6 +37,8 @@ entity pipeIDEX is
        ImmedOut			: out std_logic_vector(31 downto 0);
        ALUOpOut			: out std_logic_vector(5 downto 0);
        shamtOut			: out std_logic_vector(4 downto 0);
+       instruct20_16Out		: out std_logic_vector(4 downto 0);
+       instruct15_11Out		: out std_logic_vector(4 downto 0);
        instruct5_0Out		: out std_logic_vector(5 downto 0);
        controlOut		: out std_logic_vector(4 downto 0));
 end pipeIDEX;
@@ -60,6 +64,8 @@ begin
   Immed_reg: dffNbit port map(clk,RST,sWE,ImmedIn,ImmedOut);
   ALUOp_reg: dffNbit generic map(N => 6) port map(clk,RST,sWE,ALUOpIn,ALUOpOut);
   shamt_reg: dffNbit generic map(N=> 5) port map(clk,RST,sWE,shamtIn,shamtOut);
+  instruct20_16_reg: dffNbit generic map(N => 5) port map(clk,RST,sWE,instruct20_16In,instruct20_16Out);
+  instruct15_11_reg: dffNbit generic map(N => 5) port map(clk,RST,sWE,instruct15_11In,instruct15_11Out);
   instruct5_0_reg: dffNbit generic map(N=> 6) port map(clk,RST,sWE,instruct5_0In,instruct5_0Out);
   control_reg: dffNbit generic map(N => 5) port map(clk,RST,sWE,controlIn,controlOut);
 end structure;

@@ -25,11 +25,15 @@ entity executionStage is
        Immed  		: in std_logic_vector(31 downto 0);
        shamt  		: in std_logic_vector(4 downto 0);
        Add4In    	: in std_logic_vector(31 downto 0);
+       instruct20_16In	: in std_logic_vector(4 downto 0);
+       instruct15_11In	: in std_logic_vector(4 downto 0);
        instruct5_0	: in std_logic_vector(5 downto 0);
        controlIn	: in std_logic_vector(4 downto 0);
        ALUResult	: out std_logic_vector(31 downto 0);
        Rt_DataOut    	: out std_logic_vector(31 downto 0);
        Add4Out    	: out std_logic_vector(31 downto 0);
+       instruct20_16Out	: out std_logic_vector(4 downto 0);
+       instruct15_11Out	: out std_logic_vector(4 downto 0);
        controlOut	: out std_logic_vector(4 downto 0);
        Overflow		: out std_logic);
 end executionStage;
@@ -77,7 +81,7 @@ signal AmuxOut,BmuxOut,hardcoded16,sAdd4,sRt_Data	: std_logic_vector(31 downto 0
 signal sShamt : std_logic_vector(31 downto 0) := (others => '0');
 signal sALUSrc		: std_logic_vector(2 downto 0);
 signal sControl : std_logic_vector(3 downto 0);
-signal sControlVector : std_logic_vector(4 downto 0);
+signal sControlVector,sinstruct20_16,sinstruct15_11 : std_logic_vector(4 downto 0);
 
 begin 
   hardcoded16 <= x"00000010";
@@ -88,6 +92,10 @@ begin
   Rt_DataOut <= sRt_Data;
   sControlVector <= controlIn;
   controlOut <= sControlVector;
+  sinstruct20_16 <= instruct20_16In;
+  instruct20_16Out <= sinstruct20_16;
+  sinstruct15_11 <= instruct15_11In;
+  instruct15_11Out <= sinstruct15_11;
   A_source: mux4to1 port map(Rs_Data,sShamt,hardcoded16,hardcoded16,sALUSrc(0),sALUSrc(1),AmuxOut);
   B_source: mux2to1Nbit port map(Rt_data,Immed,sALUSrc(2),BmuxOut);
   full_alu: ALU port map(AmuxOut,BmuxOut,sControl,open,open,Overflow,ALUResult);
