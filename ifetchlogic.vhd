@@ -37,20 +37,6 @@ end ifetchlogic;
 
 architecture structure of ifetchlogic is
 
---component instructMem
---generic 
---	(
---		DATA_WIDTH : natural := 32;
---		ADDR_WIDTH : natural := 10
---	);
-	
---	port 
---	(
---		addr	: in natural range 0 to 2**ADDR_WIDTH - 1;
---		q		: out std_logic_vector((DATA_WIDTH -1) downto 0)
---	);
---end component;
-
 component mem
   generic(DATA_WIDTH   : natural := 32;
    	  ADDR_WIDTH   : natural := 10);
