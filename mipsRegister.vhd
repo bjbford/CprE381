@@ -59,7 +59,7 @@ signal dff0 : std_logic_vector(N-1 downto 0) := x"00000000";
 --2D array of 32 signals of size 32 bits
 type blah is array (31 downto 0) of std_logic_vector(31 downto 0);
 signal sQ : blah;
-signal v0 : std_logic_vector(31 downto 0);
+--signal v0 : std_logic_vector(31 downto 0);
 
 begin
   write_enable: process(WE,Wr_sel)
@@ -77,7 +77,7 @@ begin
 G1: for i in 1 to N-1 generate
   dff_i : dffNbit port map(clk,RST,sDecode(i),DataIn,sQ(i));
 end generate;
-v0 <= sQ(2);
+--v0 <= sQ(2);
 -- Rs_Data mux
   mux32to1_Rs: mux32to1 port map(sDff0_out,sQ(1),sQ(2),sQ(3),sQ(4),sQ(5),sQ(6),sQ(7),
 				sQ(8),sQ(9),sQ(10),sQ(11),sQ(12),sQ(13),sQ(14),sQ(15),

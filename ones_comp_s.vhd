@@ -27,17 +27,16 @@ end ones_comp_s;
 
 architecture structure of ones_comp_s is
 component inv
-   port(i_A          : in std_logic;
-        o_F          : out std_logic);
+  port(input          : in std_logic;
+       output          : out std_logic);
 end component;
 
 begin
 
 -- We loop through and instantiate and connect N and2 modules
 G1: for i in 0 to N-1 generate
-  inv_i: inv 
-    port map(i_A  => i_A(i),
-  	          o_F  => o_F(i));
+  inversion_i: inv 
+    port map(i_A(i),o_F(i));
 end generate;
   
 end structure;

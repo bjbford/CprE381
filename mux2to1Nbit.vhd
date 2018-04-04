@@ -28,9 +28,9 @@ entity mux2to1Nbit is
 end mux2to1Nbit;
 
 architecture structure of mux2to1Nbit is
-component inv
-  port(i_A          : in std_logic;
-       o_F          : out std_logic);
+component my_inv
+  port(input          : in std_logic;
+       output          : out std_logic);
 end component;
 
 component my_or2
@@ -49,7 +49,7 @@ signal s1, s2, s3   : std_logic_vector(N-1 downto 0);
 
 begin
 G1: for i in 0 to N-1 generate
-  inv_i: inv 
+  inversion_i: my_inv 
     port map(i_X, s1(i));
   and1_i: my_and2
     port map(i_A(i), s1(i), s2(i));

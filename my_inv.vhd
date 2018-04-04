@@ -5,7 +5,7 @@
 -------------------------------------------------------------------------
 
 
--- inv.vhd
+-- my_inv.vhd
 -------------------------------------------------------------------------
 -- DESCRIPTION: This file contains an implementation of a 1-input NOT 
 -- gate.
@@ -18,16 +18,16 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 
-entity inv is
+entity my_inv is
 
-  port(i_A          : in std_logic;
-       o_F          : out std_logic);
+  port(input          : in std_logic;
+       output          : out std_logic);
 
-end inv;
+end my_inv;
 
-architecture dataflow of inv is
+architecture dataflow of my_inv is
 begin
 
-  o_F <= not i_A;
+  output <= not input;
   
 end dataflow;

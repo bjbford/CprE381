@@ -5,3 +5,11 @@
 *.mpf
 *.mti
 work/
+*.txt
+*.sdc
+*.qsf
+db/
+incremental_db/
+output_files/
+*.qws
+*.qpf
