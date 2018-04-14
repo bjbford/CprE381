@@ -50,7 +50,8 @@ entity decodeStage is
        instruct20_16	: out std_logic_vector(4 downto 0);
        instruct5_0    	: out std_logic_vector(5 downto 0);
        controlOut	: out std_logic_vector(3 downto 0);
-       MemRead		: out std_logic);
+       MemRead		: out std_logic
+       Branch     : out std_logic);
 end decodeStage;
 
 architecture structure of decodeStage is
@@ -159,6 +160,7 @@ begin
   sCarryIn <= '0';
   reg31 <= "11111";
   controlOut(3) <= sLink;
+  Branch <= sBranchOR;
 
   --Branch operation check
   checkZero : process(sRs,sRt)

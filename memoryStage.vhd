@@ -26,14 +26,10 @@ entity memoryStage is
        controlIn	: in std_logic_vector(3 downto 0);
        ALUResult	: in std_logic_vector(31 downto 0);
        WriteRegIn	: in std_logic_vector(4 downto 0);
-       instruct20_16In	: in std_logic_vector(4 downto 0);
-       instruct15_11In	: in std_logic_vector(4 downto 0);
        ReadData    	: out std_logic_vector(31 downto 0);
        Add4Out    	: out std_logic_vector(31 downto 0);
        ALUResultOut    	: out std_logic_vector(31 downto 0);
        WriteRegOut	: out std_logic_vector(4 downto 0);
-       instruct20_16Out	: out std_logic_vector(4 downto 0);
-       instruct15_11Out	: out std_logic_vector(4 downto 0);
        controlOut	: out std_logic_vector(3 downto 0));
 end memoryStage;
 
@@ -58,7 +54,7 @@ component mux2to1Nbit
 end component;
 
 signal sAdd4,sALUResult,sWriteData	: std_logic_vector(31 downto 0);
-signal sWriteReg,sinstruct20_16,sinstruct15_11 : std_logic_vector(4 downto 0);
+signal sWriteReg,sinstruct20_16,sinstruct25_21 : std_logic_vector(4 downto 0);
 signal truncate : std_logic_vector(9 downto 0);
 signal dmemAddr : natural range 0 to 1023;
 signal sControl : std_logic_vector(3 downto 0);
@@ -74,10 +70,6 @@ begin
   controlOut <= sControl;
   sWriteReg <= WriteRegIn;
   WriteRegOut <= sWriteReg;
-  sinstruct20_16 <= instruct20_16In;
-  instruct20_16Out <= sinstruct20_16;
-  sinstruct15_11 <= instruct15_11In;
-  instruct15_11Out <= sinstruct15_11;
 
   StoreForward_mux: mux2to1Nbit port map(Rt_Data,sALUResult,ForwardStoreSel,sWriteData);
 

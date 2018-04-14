@@ -44,7 +44,6 @@ entity executionStage is
        Rt_DataOut    	: out std_logic_vector(31 downto 0);
        Add4Out    	: out std_logic_vector(31 downto 0);
        WriteRegOut	: out std_logic_vector(4 downto 0);
-       instruct25_21Out	: out std_logic_vector(4 downto 0);
        instruct20_16Out	: out std_logic_vector(4 downto 0);
        controlOut	: out std_logic_vector(3 downto 0);
        ForwardStore	: out std_logic; --Forward Store mux selector
@@ -116,7 +115,7 @@ signal AmuxOut,BmuxOut,hardcoded16,sAdd4,sRt_Data,sForwardASource,sForwardBSourc
 signal sShamt : std_logic_vector(31 downto 0) := (others => '0');
 signal sALUSrc		: std_logic_vector(2 downto 0);
 signal sControl,sControlVector : std_logic_vector(3 downto 0);
-signal sWriteReg,sinstruct20_16,sinstruct25_21 : std_logic_vector(4 downto 0);
+signal sWriteReg,sinstruct20_16 : std_logic_vector(4 downto 0);
 signal sForwardA,sForwardB,sForwardASel,sForwardBSel : std_logic;
 signal inputALUSrc,ALUSelectA,input3 : std_logic_vector(1 downto 0);
 
@@ -133,12 +132,10 @@ begin
   WriteRegOut <= sWriteReg;
   sinstruct20_16 <= instruct20_16In;
   instruct20_16Out <= sinstruct20_16;
-  sinstruct25_21 <= instruct25_21In;
-  instruct25_21Out <= sinstruct25_21;
   inputALUSrc <= sALUSrc(1 downto 0);
   input3 <= "11";
 
-  forwardUnit: forwardingUnit port map(EXMEM_RegWrite,MEMWB_RegWrite,Branch,IFID_RegisterRs,IFID_RegisterRt,sinstruct25_21,sinstruct20_16,EXMEM_RegisterRt,EXMEM_WriteReg,MEMWB_WriteReg,sForwardA,sForwardB,sForwardASel,sForwardBSel,ForwardStore,ForwardRs,ForwardRt);
+  forwardUnit: forwardingUnit port map(EXMEM_RegWrite,MEMWB_RegWrite,Branch,IFID_RegisterRs,IFID_RegisterRt,instruct25_21In,sinstruct20_16,EXMEM_RegisterRt,EXMEM_WriteReg,MEMWB_WriteReg,sForwardA,sForwardB,sForwardASel,sForwardBSel,ForwardStore,ForwardRs,ForwardRt);
   
   ForwardA_source: mux2to1Nbit port map(WB_WriteData,EXMEM_ALUResult,sForwardASel,sForwardASource);
   ForwardB_source: mux2to1Nbit port map(WB_WriteData,EXMEM_ALUResult,sForwardBSel,sForwardBSource);

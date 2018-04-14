@@ -78,14 +78,12 @@ component pipeEXMEM
        RtDataIn			: in std_logic_vector(31 downto 0);
        WriteRegIn		: in std_logic_vector(4 downto 0);
        instruct20_16In		: in std_logic_vector(4 downto 0);
-       instruct15_11In		: in std_logic_vector(4 downto 0);
        controlIn		: in std_logic_vector(3 downto 0);
        add4DataOut		: out std_logic_vector(31 downto 0);
        ALUResultOut		: out std_logic_vector(31 downto 0);
        RtDataOut		: out std_logic_vector(31 downto 0);
        WriteRegOut		: out std_logic_vector(4 downto 0);
        instruct20_16Out		: out std_logic_vector(4 downto 0);
-       instruct15_11Out		: out std_logic_vector(4 downto 0);
        controlOut		: out std_logic_vector(3 downto 0));
 end component;
 
@@ -97,15 +95,11 @@ component pipeMEMWB
        ALUResultIn		: in std_logic_vector(31 downto 0);
        ReadDataIn		: in std_logic_vector(31 downto 0);
        WriteRegIn		: in std_logic_vector(4 downto 0);
-       instruct20_16In		: in std_logic_vector(4 downto 0);
-       instruct15_11In		: in std_logic_vector(4 downto 0);
        controlIn		: in std_logic_vector(3 downto 0);
        add4DataOut		: out std_logic_vector(31 downto 0);
        ALUResultOut		: out std_logic_vector(31 downto 0);
        ReadDataOut		: out std_logic_vector(31 downto 0);
        WriteRegOut		: out std_logic_vector(4 downto 0);
-       instruct20_16Out		: out std_logic_vector(4 downto 0);
-       instruct15_11Out		: out std_logic_vector(4 downto 0);
        controlOut		: out std_logic_vector(3 downto 0));
 end component;
 
@@ -150,7 +144,8 @@ component decodeStage
        instruct20_16	: out std_logic_vector(4 downto 0);
        instruct5_0    	: out std_logic_vector(5 downto 0);
        controlOut	: out std_logic_vector(3 downto 0);
-       MemRead		: out std_logic);
+       MemRead		: out std_logic
+       Branch     : out std_logic);
 end component;
 
 component executionStage
@@ -179,7 +174,6 @@ component executionStage
        Rt_DataOut    	: out std_logic_vector(31 downto 0);
        Add4Out    	: out std_logic_vector(31 downto 0);
        WriteRegOut	: out std_logic_vector(4 downto 0);
-       instruct25_21Out	: out std_logic_vector(4 downto 0);
        instruct20_16Out	: out std_logic_vector(4 downto 0);
        controlOut	: out std_logic_vector(3 downto 0);
        ForwardStore	: out std_logic; --Forward Store mux selector
@@ -189,21 +183,16 @@ component executionStage
 end component;
 
 component memoryStage
-  port(clk		: in std_logic;
        ForwardStoreSel	: in std_logic;
        Rt_Data      	: in std_logic_vector(31 downto 0);
        Add4In    	: in std_logic_vector(31 downto 0);
        controlIn	: in std_logic_vector(3 downto 0);
        ALUResult	: in std_logic_vector(31 downto 0);
        WriteRegIn	: in std_logic_vector(4 downto 0);
-       instruct20_16In	: in std_logic_vector(4 downto 0);
-       instruct15_11In	: in std_logic_vector(4 downto 0);
        ReadData    	: out std_logic_vector(31 downto 0);
        Add4Out    	: out std_logic_vector(31 downto 0);
        ALUResultOut    	: out std_logic_vector(31 downto 0);
        WriteRegOut	: out std_logic_vector(4 downto 0);
-       instruct20_16Out	: out std_logic_vector(4 downto 0);
-       instruct15_11Out	: out std_logic_vector(4 downto 0);
        controlOut	: out std_logic_vector(3 downto 0));
 end component;
 
@@ -217,37 +206,39 @@ end component;
 
 signal IF_Add4,IFID_Add4,ID_Add4,IDEX_Add4,EX_Add4,EXMEM_Add4,MEM_Add4,MEMWB_Add4 : std_logic_vector(31 downto 0);
 signal sDatatoPC,IF_instruct,ID_instruct,WB_Data,sMemReg : std_logic_vector(31 downto 0);
-signal WB_RegWrite,sJumpJrBranch,IFID_Flush,IDEX_Flush,Stall_PC,Stall_IFID,IDEX_MemRead,ID_MemRead : std_logic;
+signal sJumpJrBranch,IFID_Flush,IDEX_Flush,Stall_PC,Stall_IFID,IDEX_MemRead,ID_MemRead,ID_Branch,EX_ForwardStore,EX_ForwardRs,EX_ForwardRt : std_logic;
 signal ID_RsData,ID_RtData,ID_Immed,EX_ALU,EX_Rt_Data,MEM_ALU,MEM_Data,MEMWB_Data 	: std_logic_vector(31 downto 0);
 signal IDEX_RsData,IDEX_Rt_Data,IDEX_Immed,EXMEM_ALU,EXMEM_Rt_Data,MEMWB_ALU 	: std_logic_vector(31 downto 0);
 signal ID_ALUOP,IDEX_ALUOP			: std_logic_vector(5 downto 0);
 signal ID_instruct5_0,IDEX_instruct5_0		: std_logic_vector(5 downto 0);
 signal ID_control,IDEX_Control,EX_Control,EXMEM_Control,MEM_Control,MEMWB_Control 	: std_logic_vector(3 downto 0);
-signal ID_shamt, IDEX_shamt,WB_WriteReg,sWriteReg,reg31,ID_instruct20_16,ID_instruct15_11,MEM_instruct20_16,MEM_instruct15_11	: std_logic_vector(4 downto 0);
-signal IDEX_instruct15_11,IDEX_instruct20_16,EX_instruct20_16,EX_instruct15_11,EXMEM_instruct20_16,EXMEM_instruct15_11,MEM_instruct25_21 : std_logic_vector(4 downto 0);
-signal MEMWB_instruct20_16,MEMWB_instruct15_11,ID_instruct25_21,IDEX_instruct25_21,EX_instruct25_21,EXMEM_instruct25_21,MEMWB_instruct25_21 : std_logic_vector(4 downto 0);
+signal ID_shamt,IDEX_shamt,ID_instruct20_16,MEM_instruct20_16	: std_logic_vector(4 downto 0);
+signal IDEX_instruct20_16,EX_instruct20_16,EXMEM_instruct20_16 : std_logic_vector(4 downto 0);
+signal ID_instruct25_21,IDEX_instruct25_21,EX_instruct25_21 : std_logic_vector(4 downto 0);
+signal ID_WriteReg,MEMWB_WriteReg,IDEX_WriteReg,EX_WriteReg,EXMEM_WriteReg,MEM_WriteReg : std_logic_vector(4 downto 0);
 
 begin
-  fetch: fetchStage port map(clk,RST,sJumpJrBranch,Stall_PC,sDatatoPC,IF_Add4,IF_instruct); 
-  IFID_regs: pipeIFID port map(clk,RST,IFID_Flush,Stall_IFID,IF_Add4,IF_instruct,IFID_Add4,ID_instruct); 
+  fetch: fetchStage port map(clk,RST,sJumpJrBranch,Stall_PC,sDatatoPC,IF_Add4,IF_instruct);
+  IFID_regs: pipeIFID port map(clk,RST,IFID_Flush,Stall_IFID,IF_Add4,IF_instruct,IFID_Add4,ID_instruct);
 
-  decode: decodeStage port map(clk,RST,WB_RegWrite,WB_WriteReg,WB_Data,ID_instruct,IFID_Add4,IDEX_instruct20_16,IDEX_MemRead,Stall_PC,Stall_IFID,IFID_Flush,IDEX_Flush,
-				ID_RsData,ID_RtData,ID_ALUOP,ID_Immed,ID_shamt,sDatatoPC,sJumpJrBranch,ID_Add4,ID_instruct25_21,ID_instruct20_16,ID_instruct15_11,ID_instruct5_0,ID_control,ID_MemRead);
-  IDEX_regs: pipeIDEX port map(clk,RST,Stall_IDEX,IDEX_Flush,ID_Add4,ID_RsData,ID_RtData,ID_Immed,ID_ALUOP,ID_shamt,ID_instruct25_21,ID_instruct20_16,ID_instruct15_11,ID_instruct5_0,ID_Control,ID_MemRead,
-				IDEX_Add4,IDEX_RsData,IDEX_Rt_Data,IDEX_Immed,IDEX_ALUOP,IDEX_shamt,IDEX_instruct25_21,IDEX_instruct20_16,IDEX_instruct15_11,IDEX_instruct5_0,IDEX_Control,IDEX_MemRead);
+  decode: decodeStage port map(clk,RST,MEMWB_Control(2),MEMWB_WriteReg,WB_Data,ID_instruct,IFID_Add4,IDEX_instruct20_16,EXMEM_WriteReg,IDEX_MemRead,EX_ForwardRs,EX_ForwardRt,EXMEM_ALU,Stall_PC,Stall_IFID,IFID_Flush,IDEX_Flush,
+				ID_RsData,ID_RtData,ID_ALUOP,ID_Immed,ID_shamt,sDatatoPC,sJumpJrBranch,ID_Add4,ID_WriteReg,ID_instruct25_21,ID_instruct20_16,ID_instruct5_0,ID_control,ID_MemRead,ID_Branch);
 
-  execute: executionStage port map(IDEX_RsData,IDEX_Rt_Data,IDEX_ALUOP,IDEX_Immed,IDEX_shamt,IDEX_Add4,IDEX_instruct25_21,IDEX_instruct20_16,IDEX_instruct15_11,IDEX_instruct5_0,IDEX_Control,EXMEM_instruct25_21,MEMWB_instruct25_21,
-					EXMEM_Control(2),MEMWB_Control(2),EXMEM_ALU,WB_Data,EX_ALU,EX_Rt_Data,EX_Add4,EX_instruct25_21,EX_instruct20_16,EX_instruct15_11,EX_Control,Overflow);
-  EXMEM_regs: pipeEXMEM port map(clk,RST,Stall_EXMEM,EX_Add4,EX_ALU,EX_Rt_Data,EX_instruct25_21,EX_instruct20_16,EX_instruct15_11,EX_Control,
-					EXMEM_Add4,EXMEM_ALU,EXMEM_Rt_Data,EXMEM_instruct25_21,EXMEM_instruct20_16,EXMEM_instruct15_11,EXMEM_Control);
+  IDEX_regs: pipeIDEX port map(clk,RST,Stall_IDEX,IDEX_Flush,ID_Add4,ID_RsData,ID_RtData,ID_Immed,ID_ALUOP,ID_shamt,ID_WriteReg,ID_instruct25_21,ID_instruct20_16,ID_instruct5_0,ID_Control,ID_MemRead,
+				IDEX_Add4,IDEX_RsData,IDEX_Rt_Data,IDEX_Immed,IDEX_ALUOP,IDEX_shamt,IDEX_WriteReg,IDEX_instruct25_21,IDEX_instruct20_16,IDEX_instruct5_0,IDEX_Control,IDEX_MemRead);
 
-  mem: memoryStage port map(clk,EXMEM_Rt_Data,EXMEM_Add4,EXMEM_Control,EXMEM_ALU,EXMEM_instruct25_21,EXMEM_instruct20_16,EXMEM_instruct15_11,MEM_Data,MEM_Add4,MEM_ALU,MEM_instruct25_21,MEM_instruct20_16,MEM_instruct15_11,MEM_Control);
-  MEMWB_regs: pipeMEMWB port map(clk,RST,Stall_MEMWB,MEM_Add4,MEM_ALU,MEM_Data,MEM_instruct25_21,MEM_instruct20_16,MEM_instruct15_11,MEM_Control,
-					MEMWB_Add4,MEMWB_ALU,MEMWB_Data,MEMWB_instruct25_21,MEMWB_instruct20_16,MEMWB_instruct15_11,MEMWB_Control);
-  WB_RegWrite <= MEMWB_Control(2);
-  reg31 <= "11111";
-  RegDst_mux: mux2to1Nbit generic map (N => 5) port map(MEMWB_instruct20_16,MEMWB_instruct15_11,MEMWB_Control(4),sWriteReg);
-  LinkWriteReg_mux: mux2to1Nbit generic map (N => 5) port map(sWriteReg,reg31,MEMWB_Control(3),WB_WriteReg);
+  execute: executionStage port map(IDEX_RsData,IDEX_Rt_Data,IDEX_ALUOP,IDEX_Immed,IDEX_shamt,IDEX_Add4,IDEX_WriteReg,IDEX_instruct25_21,IDEX_instruct20_16,IDEX_instruct5_0,IDEX_Control,EXMEM_instruct20_16,EXMEM_WriteReg,MEMWB_WriteReg,
+					EXMEM_Control(2),MEMWB_Control(2),ID_Branch,EXMEM_ALU,WB_Data,EX_ALU,EX_Rt_Data,EX_Add4,EX_WriteReg,EX_instruct20_16,EX_Control,EX_ForwardStore,EX_ForwardRs,EX_ForwardRt,Overflow);
+
+  EXMEM_regs: pipeEXMEM port map(clk,RST,Stall_EXMEM,EX_Add4,EX_ALU,EX_Rt_Data,EX_WriteReg,EX_instruct20_16,EX_Control,
+					EXMEM_Add4,EXMEM_ALU,EXMEM_Rt_Data,EXMEM_WriteReg,EXMEM_instruct20_16,EXMEM_Control);
+
+  mem: memoryStage port map(clk,EX_ForwardStore,EXMEM_Rt_Data,EXMEM_Add4,EXMEM_Control,EXMEM_ALU,EXMEM_WriteReg,
+          MEM_Data,MEM_Add4,MEM_ALU,MEM_WriteReg,MEM_Control);
+  
+  MEMWB_regs: pipeMEMWB port map(clk,RST,Stall_MEMWB,MEM_Add4,MEM_ALU,MEM_Data,MEM_WriteReg,MEM_Control,
+					MEMWB_Add4,MEMWB_ALU,MEMWB_Data,MEMWB_WriteReg,MEMWB_Control);
+
   MemtoReg_mux: mux2to1Nbit port map(MEMWB_Data,MEMWB_ALU,MEMWB_Control(0),sMemReg);
   Link_mux: mux2to1Nbit port map(sMemReg,MEMWB_Add4,MEMWB_Control(3),WB_Data);
 end structure;
