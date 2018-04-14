@@ -23,6 +23,7 @@ entity controlLogic is
        RegWrite     	: out std_logic;
        MemtoReg	    	: out std_logic;
        MemWrite       	: out std_logic;
+       MemRead		: out std_logic;
        RegDst       	: out std_logic;
        Branch       	: out std_logic;
        Bne		: out std_logic;
@@ -43,6 +44,7 @@ begin
            RegWrite <= '0';
            MemtoReg <= '0';
            MemWrite <= '0';
+           MemRead <= '0';
            RegDst <= '0';
            Branch <= '0';
            Bne <= '0';
@@ -54,6 +56,7 @@ begin
            RegWrite <= '1';
            MemtoReg <= '1';
            MemWrite <= '0';
+           MemRead <= '0';
            RegDst <= '1';
            Branch <= '0';
            Bne <= '0';
@@ -66,6 +69,7 @@ begin
        RegWrite <= '1';
        MemtoReg <= '1';
        MemWrite <= '0';
+       MemRead <= '0';
        RegDst <= '0';
        Branch <= '0';
        Bne <= '0';
@@ -77,6 +81,7 @@ begin
        RegWrite <= '1';
        MemtoReg <= '1';
        MemWrite <= '0';
+       MemRead <= '0';
        RegDst <= '0';
        Branch <= '0';
        Bne <= '0';
@@ -88,6 +93,7 @@ begin
        RegWrite <= '1';
        MemtoReg <= '1';
        MemWrite <= '0';
+       MemRead <= '0';
        RegDst <= '0';
        Branch <= '0';
        Bne <= '0';
@@ -99,6 +105,7 @@ begin
        RegWrite <= '1';
        MemtoReg <= '1';
        MemWrite <= '0';
+       MemRead <= '0';
        RegDst <= '0';
        Branch <= '0';
        Bne <= '0';
@@ -110,6 +117,7 @@ begin
        RegWrite <= '1';
        MemtoReg <= '1';
        MemWrite <= '0';
+       MemRead <= '0';
        RegDst <= '0';
        Branch <= '0';
        Bne <= '0';
@@ -121,6 +129,7 @@ begin
        RegWrite <= '1';
        MemtoReg <= '1';
        MemWrite <= '0';
+       MemRead <= '0';
        RegDst <= '0';
        Branch <= '0';
        Bne <= '0';
@@ -132,6 +141,7 @@ begin
        RegWrite <= '1';
        MemtoReg <= '1';
        MemWrite <= '0';
+       MemRead <= '0';
        RegDst <= '0';
        Branch <= '0';
        Bne <= '0';
@@ -143,6 +153,7 @@ begin
        RegWrite <= '1';
        MemtoReg <= '1';
        MemWrite <= '0';
+       MemRead <= '0';
        RegDst <= '0';
        Branch <= '0';
        Bne <= '0';
@@ -154,6 +165,7 @@ begin
        RegWrite <= '1';
        MemtoReg <= '0';
        MemWrite <= '0';
+       MemRead <= '1';
        RegDst <= '0';
        Branch <= '0';
        Bne <= '0';
@@ -165,6 +177,7 @@ begin
        RegWrite <= '0';
        MemtoReg <= '0'; --was X
        MemWrite <= '1';
+       MemRead <= '0';
        RegDst <= '0'; --was X
        Branch <= '0';
        Bne <= '0';
@@ -176,6 +189,7 @@ begin
        RegWrite <= '0';
        MemtoReg <= '0';
        MemWrite <= '0';
+       MemRead <= '0';
        RegDst <= '0';
        Branch <= '1';
        Bne <= '0';
@@ -187,6 +201,7 @@ begin
        RegWrite <= '0';
        MemtoReg <= '0';
        MemWrite <= '0';
+       MemRead <= '0';
        RegDst <= '0';
        Branch <= '0';
        Bne <= '1';
@@ -198,6 +213,7 @@ begin
        RegWrite <= '0';
        MemtoReg <= '0';
        MemWrite <= '0';
+       MemRead <= '0';
        RegDst <= '0';
        Branch <= '0';
        Bne <= '0';
@@ -209,6 +225,7 @@ begin
        RegWrite <= '1';
        MemtoReg <= '0';
        MemWrite <= '0';
+       MemRead <= '0';
        RegDst <= '1';
        Branch <= '0';
        Bne <= '0';
@@ -220,6 +237,7 @@ begin
        RegWrite <= '0';
        MemtoReg <= '1';
        MemWrite <= '0';
+       MemRead <= '0';
        RegDst <= '0';
        Branch <= '0';
        Bne <= '0';

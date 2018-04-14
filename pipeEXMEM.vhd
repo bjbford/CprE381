@@ -24,15 +24,17 @@ entity pipeEXMEM is
        add4DataIn		: in std_logic_vector(31 downto 0);
        ALUResultIn		: in std_logic_vector(31 downto 0);
        RtDataIn			: in std_logic_vector(31 downto 0);
+       WriteRegIn		: in std_logic_vector(4 downto 0);
        instruct20_16In		: in std_logic_vector(4 downto 0);
        instruct15_11In		: in std_logic_vector(4 downto 0);
-       controlIn		: in std_logic_vector(4 downto 0);
+       controlIn		: in std_logic_vector(3 downto 0);
        add4DataOut		: out std_logic_vector(31 downto 0);
        ALUResultOut		: out std_logic_vector(31 downto 0);
        RtDataOut		: out std_logic_vector(31 downto 0);
+       WriteRegOut		: out std_logic_vector(4 downto 0);
        instruct20_16Out		: out std_logic_vector(4 downto 0);
        instruct15_11Out		: out std_logic_vector(4 downto 0);
-       controlOut		: out std_logic_vector(4 downto 0));
+       controlOut		: out std_logic_vector(3 downto 0));
 end pipeEXMEM;
 
 architecture structure of pipeEXMEM is
@@ -53,7 +55,8 @@ begin
   add4_reg: dffNbit port map(clk,RST,sWE,add4DataIn,add4DataOut);
   ALUResult_reg: dffNbit port map(clk,RST,sWE,ALUResultIn,ALUResultOut);
   RtData_reg: dffNbit port map(clk,RST,sWE,RtDataIn,RtDataOut);
-  control_reg: dffNbit generic map(N => 5) port map(clk,RST,sWE,controlIn,controlOut);
+  control_reg: dffNbit generic map(N => 4) port map(clk,RST,sWE,controlIn,controlOut);
+  WriteReg_reg: dffNbit generic map(N => 5) port map(clk,RST,sWE,WriteRegIn,WriteRegOut);
   instruct20_16_reg: dffNbit generic map(N => 5) port map(clk,RST,sWE,instruct20_16In,instruct20_16Out);
   instruct15_11_reg: dffNbit generic map(N => 5) port map(clk,RST,sWE,instruct15_11In,instruct15_11Out);
 end structure;

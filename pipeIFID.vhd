@@ -38,15 +38,23 @@ component dffNbit
        o_Q          : out std_logic_vector(N-1 downto 0));   -- Data value output
 end component;
 
-signal sRST,sWE		: std_logic;
+signal sWE			: std_logic;
+signal simemDataIn,sadd4DataIn 	: std_logic_vector(31 downto 0);
 
 begin
---implement branch condition logic here!!
-  sRST <= RST OR Flush;
+  process(Flush,add4DataIn,imemDataIn)
+  begin
+  if(Flush = '1') then
+    sadd4DataIn <= x"00000000";
+    simemDataIn <= x"00000000";
+  else
+    sadd4DataIn <= add4DataIn;
+    simemDataIn <= imemDataIn;
+  end if;
+  end process;
   -- always write_enable unless stall is high
   sWE <= NOT Stall;
-  add4_reg: dffNbit port map(clk,sRST,sWE,add4DataIn,add4DataOut);
-  imem_reg: dffNbit port map(clk,sRST,sWE,imemDataIn,imemDataOut);
-
+  add4_reg: dffNbit port map(clk,RST,sWE,sadd4DataIn,add4DataOut);
+  imem_reg: dffNbit port map(clk,RST,sWE,simemDataIn,imemDataOut);
 end structure;
 

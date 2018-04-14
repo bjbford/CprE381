@@ -20,18 +20,21 @@ use ieee.numeric_std.all;
 
 entity memoryStage is
   port(clk		: in std_logic;
+       ForwardStoreSel	: in std_logic;
        Rt_Data      	: in std_logic_vector(31 downto 0);
        Add4In    	: in std_logic_vector(31 downto 0);
-       controlIn	: in std_logic_vector(4 downto 0);
+       controlIn	: in std_logic_vector(3 downto 0);
        ALUResult	: in std_logic_vector(31 downto 0);
+       WriteRegIn	: in std_logic_vector(4 downto 0);
        instruct20_16In	: in std_logic_vector(4 downto 0);
        instruct15_11In	: in std_logic_vector(4 downto 0);
        ReadData    	: out std_logic_vector(31 downto 0);
        Add4Out    	: out std_logic_vector(31 downto 0);
        ALUResultOut    	: out std_logic_vector(31 downto 0);
+       WriteRegOut	: out std_logic_vector(4 downto 0);
        instruct20_16Out	: out std_logic_vector(4 downto 0);
        instruct15_11Out	: out std_logic_vector(4 downto 0);
-       controlOut	: out std_logic_vector(4 downto 0));
+       controlOut	: out std_logic_vector(3 downto 0));
 end memoryStage;
 
 architecture structure of memoryStage is
@@ -46,10 +49,19 @@ component mem
        q	: out std_logic_vector((DATA_WIDTH -1) downto 0));
 end component;
 
-signal sAdd4,sALUResult	: std_logic_vector(31 downto 0);
-signal sControl,sinstruct20_16,sinstruct15_11 : std_logic_vector(4 downto 0);
+component mux2to1Nbit
+  generic(N : integer := 32);
+  port(i_A          : in std_logic_vector(N-1 downto 0);
+       i_B	    : in std_logic_vector(N-1 downto 0);
+       i_X	    : in std_logic;
+       o_Y          : out std_logic_vector(N-1 downto 0));
+end component;
+
+signal sAdd4,sALUResult,sWriteData	: std_logic_vector(31 downto 0);
+signal sWriteReg,sinstruct20_16,sinstruct15_11 : std_logic_vector(4 downto 0);
 signal truncate : std_logic_vector(9 downto 0);
 signal dmemAddr : natural range 0 to 1023;
+signal sControl : std_logic_vector(3 downto 0);
 
 begin 
   truncate <= ALUResult(11 downto 2);
@@ -60,9 +72,14 @@ begin
   Add4Out <= sAdd4;
   sControl <= controlIn;
   controlOut <= sControl;
+  sWriteReg <= WriteRegIn;
+  WriteRegOut <= sWriteReg;
   sinstruct20_16 <= instruct20_16In;
   instruct20_16Out <= sinstruct20_16;
   sinstruct15_11 <= instruct15_11In;
   instruct15_11Out <= sinstruct15_11;
-  mips_mem: mem port map(clk,dmemAddr,Rt_Data,controlIn(1),ReadData);
+
+  StoreForward_mux: mux2to1Nbit port map(Rt_Data,sALUResult,ForwardStoreSel,sWriteData);
+
+  mips_mem: mem port map(clk,dmemAddr,sWriteData,controlIn(1),ReadData);
 end structure;

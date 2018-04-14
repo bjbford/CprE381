@@ -43,7 +43,7 @@ component decoder5to32
        o_Data       : out std_logic_vector(31 downto 0));
 end component;
 
-component dffNbit
+component muxedDff
   generic(N : integer := 32);
   port(clk        : in std_logic;     -- Clock input
        i_RST        : in std_logic;     -- Reset input
@@ -73,9 +73,9 @@ begin
   decode5to32: decoder5to32 port map(sWr_sel,sDecode);
   dff0 <= x"00000000";
   -- hardcode $0 since it's a special case
-  dff_0: dffNbit port map(clk,RST,sDecode(0),dff0,sDff0_out);
+  dff_0: muxedDff port map(clk,RST,sDecode(0),dff0,sDff0_out);
 G1: for i in 1 to N-1 generate
-  dff_i : dffNbit port map(clk,RST,sDecode(i),DataIn,sQ(i));
+  dff_i : muxedDff port map(clk,RST,sDecode(i),DataIn,sQ(i));
 end generate;
 --v0 <= sQ(2);
 -- Rs_Data mux

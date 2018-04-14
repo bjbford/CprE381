@@ -21,6 +21,7 @@ entity fetchStage is
   port(clk		: in std_logic;
        RST		: in std_logic;
        JumpJrBranch	: in std_logic;
+       Stall		: in std_logic;
        Special		: in std_logic_vector(31 downto 0);
        Add4Out		: out std_logic_vector(31 downto 0);
        instruct		: out std_logic_vector(31 downto 0));
@@ -76,7 +77,7 @@ signal imemAddr 		: natural range 0 to 1023;
 begin
   s_we <= '0';
   sData <= x"00000000";
-  WriteReg <= '1';
+  WriteReg <= NOT Stall;
   truncate <= so_Q(11 downto 2);
   imemAddr <= to_integer(unsigned(truncate));
   sCarryIn <= '0';

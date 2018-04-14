@@ -23,10 +23,20 @@ entity decodeStage is
   port(clk	    	: in std_logic;
        RST	    	: in std_logic;
        RegWrite     	: in std_logic;
-       WriteReg		: in std_logic_vector(4 downto 0);
+       WriteRegIn	: in std_logic_vector(4 downto 0);
        WriteData    	: in std_logic_vector(31 downto 0);
        instruction    	: in std_logic_vector(31 downto 0);
        Add4In    	: in std_logic_vector(31 downto 0);
+       IDEX_RegisterRt  : in std_logic_vector(4 downto 0);
+       EXMEM_WriteReg   : in std_logic_vector(4 downto 0);
+       IDEX_MEMRead	: in std_logic;
+       ForwardRsSel	: in std_logic;
+       ForwardRtSel	: in std_logic;
+       EXMEM_ALUResult  : in std_logic_vector(31 downto 0);
+       Stall_PC		: out std_logic;
+       Stall_IFID     	: out std_logic;
+       IFID_Flush    	: out std_logic;
+       IDEX_Flush    	: out std_logic;
        Rs_Data      	: out std_logic_vector(31 downto 0);
        Rt_Data      	: out std_logic_vector(31 downto 0);
        ALUOp		: out std_logic_vector(5 downto 0);
@@ -35,10 +45,12 @@ entity decodeStage is
        DatatoPC		: out std_logic_vector(31 downto 0);
        Special		: out std_logic;
        Add4Out    	: out std_logic_vector(31 downto 0);
+       WriteRegOut	: out std_logic_vector(4 downto 0);
+       instruct25_21	: out std_logic_vector(4 downto 0);
        instruct20_16	: out std_logic_vector(4 downto 0);
-       instruct15_11	: out std_logic_vector(4 downto 0);
        instruct5_0    	: out std_logic_vector(5 downto 0);
-       controlOut	: out std_logic_vector(4 downto 0));
+       controlOut	: out std_logic_vector(3 downto 0);
+       MemRead		: out std_logic);
 end decodeStage;
 
 architecture structure of decodeStage is
@@ -50,12 +62,30 @@ component controlLogic
        RegWrite     	: out std_logic; --controlOut(2)
        MemtoReg	    	: out std_logic; --controlOut(0)
        MemWrite       	: out std_logic; --controlOut(1)
-       RegDst       	: out std_logic; --controlOut(4)
+       MemRead		: out std_logic;
+       RegDst       	: out std_logic;
        Branch       	: out std_logic;
        Bne		: out std_logic;
-       Jump       	: out std_logic;     
-       JumpRet       	: out std_logic; 
+       Jump       	: out std_logic;       
+       JumpRet       	: out std_logic;
        Link       	: out std_logic); --controlOut(3)
+end component;
+
+component hazardDetection
+  port(IFID_RegisterRs	    	: in std_logic_vector(4 downto 0);
+       IFID_RegisterRt	    	: in std_logic_vector(4 downto 0);
+       IDEX_RegisterRt	    	: in std_logic_vector(4 downto 0);
+       EXMEM_WriteReg		: in std_logic_vector(4 downto 0);
+       IDEX_MEMRead		: in std_logic;
+       Branch			: in std_logic;
+       BranchTaken		: in std_logic;
+       Jump			: in std_logic;
+       JAL			: in std_logic; --controlOut(3)
+       JR			: in std_logic;
+       Stall_PC			: out std_logic;
+       Stall_IFID     		: out std_logic;
+       IFID_Flush    		: out std_logic;
+       IDEX_Flush    		: out std_logic);
 end component;
 
 component fulladderNbit
@@ -105,15 +135,15 @@ component mux2to1
        o_Y          : out std_logic);
 end component;
 
-signal sAdd4,sRt,sRs,sImmed,sBranchAdd,sBranchMux,sBranchShift,sJump,sJumpMux : std_logic_vector(31 downto 0);
+signal sAdd4,sRt,sRs,sImmed,sBranchAdd,sBranchMux,sBranchShift,sJump,sJumpMux,sRsRegData,sRtRegData : std_logic_vector(31 downto 0);
 signal instruct15_0 : std_logic_vector(15 downto 0);
 signal instruct31_26,sinstruct5_0 : std_logic_vector(5 downto 0);
-signal instruct25_21,sinstruct20_16,sinstruct15_11 : std_logic_vector(4 downto 0);
-signal JumpControl,JumpRetControl,sBranch,sCarryIn,sNotZero,Zero,sZeroMux,BranchControl,BneControl,sBranchOR : std_logic;
+signal sinstruct25_21,sinstruct20_16,sinstruct15_11,reg31,sRegDst : std_logic_vector(4 downto 0);
+signal JumpControl,JumpRetControl,sBranch,sCarryIn,sNotZero,Zero,sZeroMux,BranchControl,BneControl,sBranchOR,sLink,sRegDstControl : std_logic;
 
 begin 
   instruct31_26 <= instruction(31 downto 26);
-  instruct25_21 <= instruction(25 downto 21);
+  sinstruct25_21 <= instruction(25 downto 21);
   sinstruct20_16 <= instruction(20 downto 16);
   sinstruct15_11 <= instruction(15 downto 11);
   instruct15_0 <= instruction(15 downto 0);
@@ -127,6 +157,8 @@ begin
   sJump <= sAdd4(31 downto 28) & instruction(25 downto 0) & "00";
   sNotZero <= NOT Zero;
   sCarryIn <= '0';
+  reg31 <= "11111";
+  controlOut(3) <= sLink;
 
   --Branch operation check
   checkZero : process(sRs,sRt)
@@ -138,19 +170,27 @@ begin
     end if;
   end process;
 
-  controlUnit: controlLogic port map(instruct31_26,sinstruct5_0,ALUOp,controlOut(2),controlOut(0),controlOut(1),controlOut(4),BranchControl,BneControl,JumpControl,JumpRetControl,controlOut(3));
+  controlUnit: controlLogic port map(instruct31_26,sinstruct5_0,ALUOp,controlOut(2),controlOut(0),controlOut(1),MemRead,sRegDstControl,BranchControl,BneControl,JumpControl,JumpRetControl,sLink);
+
+  hazardUnit: hazardDetection port map(sinstruct25_21,sinstruct20_16,IDEX_RegisterRt,EXMEM_WriteReg,IDEX_MEMRead,sBranchOR,sBranch,JumpControl,sLink,JumpRetControl,Stall_PC,Stall_IFID,IFID_Flush,IDEX_Flush); --controlOut(3) = JAL
 
   branch_mux: mux2to1Nbit port map(sAdd4,sBranchAdd,sBranch,sBranchMux);
   jump_mux: mux2to1Nbit port map(sBranchMux,sJump,JumpControl,sJumpMux);
   jr_mux: mux2to1Nbit port map(sJumpMux,sRs,JumpRetControl,DatatoPC);
   adder_branch: fulladderNbit port map(sCarryIn,sAdd4,sBranchShift,sBranchAdd,open,open,open);
   zero_mux: mux2to1 port map(Zero,sNotZero,BneControl,sZeroMux);
+  
+  RegDst_mux: mux2to1Nbit generic map(N => 5) port map(sinstruct20_16,sinstruct15_11,sRegDstControl,sRegDst);
+  LinkWriteReg_mux: mux2to1Nbit generic map(N => 5) port map(sRegDst,reg31,sLink,WriteRegOut);
 
-  regs: mipsRegister port map(WriteData,sinstruct20_16,instruct25_21,WriteReg,clk,RST,RegWrite,sRs,sRt);
-
+  regs: mipsRegister port map(WriteData,sinstruct20_16,sinstruct25_21,WriteRegIn,clk,RST,RegWrite,sRsRegData,sRtRegData);
+  
+  RsForward_mux: mux2to1Nbit port map(sRsRegData,EXMEM_ALUResult,ForwardRsSel,sRs);
+  RtForward_mux: mux2to1Nbit port map(sRtRegData,EXMEM_ALUResult,ForwardRtSel,sRt);
+ 
   mips_signextend: mips_extender port map(instruct15_0,sImmed);
+  instruct25_21 <= sinstruct25_21;
   instruct20_16 <= sinstruct20_16;
-  instruct15_11 <= sinstruct15_11;
   instruct5_0 <= sinstruct5_0;
   Immed <= sImmed;
   Rs_Data <= sRs;
