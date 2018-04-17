@@ -38,15 +38,15 @@ entity executionStage is
        EXMEM_RegWrite   : in std_logic;
        MEMWB_RegWrite   : in std_logic;
        Branch		: in std_logic;
+       JR		: in std_logic;
        EXMEM_ALUResult  : in std_logic_vector(31 downto 0);
        WB_WriteData	: in std_logic_vector(31 downto 0);
        ALUResult	: out std_logic_vector(31 downto 0);
-       Rt_DataOut    	: out std_logic_vector(31 downto 0);
+       WriteDataOut    	: out std_logic_vector(31 downto 0);
        Add4Out    	: out std_logic_vector(31 downto 0);
        WriteRegOut	: out std_logic_vector(4 downto 0);
        instruct20_16Out	: out std_logic_vector(4 downto 0);
        controlOut	: out std_logic_vector(3 downto 0);
-       ForwardStore	: out std_logic; --Forward Store mux selector
        ForwardRs	: out std_logic; --Forward Rs mux selector
        ForwardRt	: out std_logic; --Forward Rt mux selector
        Overflow		: out std_logic);
@@ -95,6 +95,7 @@ component forwardingUnit
   port(EXMEM_RegWrite   	: in std_logic;
        MEMWB_RegWrite   	: in std_logic;
        Branch			: in std_logic;
+       JR			: in std_logic;
        IFID_RegisterRs		: in std_logic_vector(4 downto 0);
        IFID_RegisterRt		: in std_logic_vector(4 downto 0);
        IDEX_RegisterRs		: in std_logic_vector(4 downto 0);
@@ -106,12 +107,11 @@ component forwardingUnit
        ForwardB       		: out std_logic; -- Use forward mux data
        ForwardASel		: out std_logic; --Forward A mux selector
        ForwardBSel		: out std_logic; --Forward B mux selector
-       ForwardStore		: out std_logic; --Forward Store mux selector
        ForwardRs		: out std_logic; --Forward Rs mux selector
        ForwardRt		: out std_logic); --Forward Rt mux selector
 end component;
 
-signal AmuxOut,BmuxOut,hardcoded16,sAdd4,sRt_Data,sForwardASource,sForwardBSource,Bnormal : std_logic_vector(31 downto 0);
+signal AmuxOut,BmuxOut,hardcoded16,sAdd4,sForwardASource,sForwardBSource,Bnormal : std_logic_vector(31 downto 0);
 signal sShamt : std_logic_vector(31 downto 0) := (others => '0');
 signal sALUSrc		: std_logic_vector(2 downto 0);
 signal sControl,sControlVector : std_logic_vector(3 downto 0);
@@ -124,8 +124,7 @@ begin
   sShamt <= (31 downto 5 => '0') & shamt;
   sAdd4 <= Add4In;
   Add4Out <= sAdd4;
-  sRt_Data <= Rt_Data;
-  Rt_DataOut <= sRt_Data;
+  WriteDataOut <= Bnormal;
   sControlVector <= controlIn;
   controlOut <= sControlVector;
   sWriteReg <= WriteRegIn;
@@ -135,15 +134,17 @@ begin
   inputALUSrc <= sALUSrc(1 downto 0);
   input3 <= "11";
 
-  forwardUnit: forwardingUnit port map(EXMEM_RegWrite,MEMWB_RegWrite,Branch,IFID_RegisterRs,IFID_RegisterRt,instruct25_21In,sinstruct20_16,EXMEM_RegisterRt,EXMEM_WriteReg,MEMWB_WriteReg,sForwardA,sForwardB,sForwardASel,sForwardBSel,ForwardStore,ForwardRs,ForwardRt);
+  forwardUnit: forwardingUnit port map(EXMEM_RegWrite,MEMWB_RegWrite,Branch,JR,IFID_RegisterRs,IFID_RegisterRt,instruct25_21In,sinstruct20_16,EXMEM_RegisterRt,EXMEM_WriteReg,MEMWB_WriteReg,sForwardA,sForwardB,sForwardASel,sForwardBSel,ForwardRs,ForwardRt);
   
   ForwardA_source: mux2to1Nbit port map(WB_WriteData,EXMEM_ALUResult,sForwardASel,sForwardASource);
   ForwardB_source: mux2to1Nbit port map(WB_WriteData,EXMEM_ALUResult,sForwardBSel,sForwardBSource);
 
   A_source: mux4to1 port map(Rs_Data,sShamt,hardcoded16,sForwardASource,ALUSelectA(0),ALUSelectA(1),AmuxOut);
   A_controlmux: mux2to1Nbit generic map(N => 2) port map(inputALUSrc,input3,sForwardA,ALUSelectA);
-  B_source: mux2to1Nbit port map(Rt_data,Immed,sALUSrc(2),Bnormal);
-  B_mux: mux2to1Nbit port map(Bnormal,sForwardBSource,sForwardB,BmuxOut);
+
+  B_source: mux2to1Nbit port map(Bnormal,Immed,sALUSrc(2),BmuxOut);
+  B_mux: mux2to1Nbit port map(Rt_data,sForwardBSource,sForwardB,Bnormal);
+
   full_alu: ALU port map(AmuxOut,BmuxOut,sControl,open,open,Overflow,ALUResult);
   controlALU: ALUcontrol port map(instruct5_0,ALUOp,sALUSrc,sControl);
 end structure;

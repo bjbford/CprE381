@@ -20,6 +20,7 @@ entity hazardDetection is
   port(IFID_RegisterRs	    	: in std_logic_vector(4 downto 0);
        IFID_RegisterRt	    	: in std_logic_vector(4 downto 0);
        IDEX_RegisterRt	    	: in std_logic_vector(4 downto 0);
+       IDEX_WriteReg		: in std_logic_vector(4 downto 0);
        EXMEM_WriteReg		: in std_logic_vector(4 downto 0);
        IDEX_MEMRead		: in std_logic;
        Branch			: in std_logic;
@@ -29,13 +30,14 @@ entity hazardDetection is
        JR			: in std_logic;
        Stall_PC			: out std_logic;
        Stall_IFID     		: out std_logic;
+       Stall_IDEX     		: out std_logic;
        IFID_Flush    		: out std_logic;
        IDEX_Flush    		: out std_logic);
 end hazardDetection;
 
 architecture sel_when of hazardDetection is
 begin
-  process (IFID_RegisterRs,IFID_RegisterRt,IDEX_RegisterRt,EXMEM_WriteReg,IDEX_MEMRead,Branch,BranchTaken,Jump,JAL,JR)
+  process (IFID_RegisterRs,IFID_RegisterRt,IDEX_RegisterRt,IDEX_WriteReg,EXMEM_WriteReg,IDEX_MEMRead,Branch,BranchTaken,Jump,JAL,JR)
   begin
     -- Load-use hazard
     if(IDEX_MEMRead = '1' and ((IDEX_RegisterRt = IFID_RegisterRs) or (IDEX_RegisterRt = IFID_RegisterRt))) then
@@ -43,8 +45,13 @@ begin
       Stall_IFID <= '1';
       IDEX_Flush <= '1';
     -- Jump or jal or jr detected
-    elsif((Jump = '1') or (JAL = '1') or (JR = '1')) then
+    elsif((Jump = '1') or (JAL = '1')) then
       IFID_Flush <= '1';
+    -- Jr detected and data hazard
+    elsif(JR = '1' and (IFID_RegisterRs = IDEX_WriteReg)) then
+      Stall_PC <= '1';
+      Stall_IFID <= '1';
+      IDEX_Flush <= '1';
     -- branch bubble insertion
     elsif(Branch = '1' and ((EXMEM_WriteReg = IFID_RegisterRs) or (EXMEM_WriteReg = IFID_RegisterRt))) then
       Stall_PC <= '1';
@@ -56,6 +63,7 @@ begin
     else
       Stall_PC <= '0';
       Stall_IFID <= '0';
+      Stall_IDEX <= '0';
       IFID_Flush <= '0';
       IDEX_Flush <= '0';
     end if;

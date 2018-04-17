@@ -48,7 +48,7 @@ begin
            RegDst <= '0';
            Branch <= '0';
            Bne <= '0';
-           Jump <= '1';
+           Jump <= '0'; -- was 1
            JumpRet <= '1';
            Link <= '0';
 	 when others => --arithmetic R-type instructions

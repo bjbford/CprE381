@@ -28,6 +28,7 @@ entity decodeStage is
        instruction    	: in std_logic_vector(31 downto 0);
        Add4In    	: in std_logic_vector(31 downto 0);
        IDEX_RegisterRt  : in std_logic_vector(4 downto 0);
+       IDEX_WriteReg	: in std_logic_vector(4 downto 0);
        EXMEM_WriteReg   : in std_logic_vector(4 downto 0);
        IDEX_MEMRead	: in std_logic;
        ForwardRsSel	: in std_logic;
@@ -35,6 +36,7 @@ entity decodeStage is
        EXMEM_ALUResult  : in std_logic_vector(31 downto 0);
        Stall_PC		: out std_logic;
        Stall_IFID     	: out std_logic;
+       Stall_IDEX     	: out std_logic;
        IFID_Flush    	: out std_logic;
        IDEX_Flush    	: out std_logic;
        Rs_Data      	: out std_logic_vector(31 downto 0);
@@ -50,8 +52,9 @@ entity decodeStage is
        instruct20_16	: out std_logic_vector(4 downto 0);
        instruct5_0    	: out std_logic_vector(5 downto 0);
        controlOut	: out std_logic_vector(3 downto 0);
-       MemRead		: out std_logic
-       Branch     : out std_logic);
+       MemRead		: out std_logic;
+       Branch     	: out std_logic;
+       JR	     	: out std_logic);
 end decodeStage;
 
 architecture structure of decodeStage is
@@ -76,6 +79,7 @@ component hazardDetection
   port(IFID_RegisterRs	    	: in std_logic_vector(4 downto 0);
        IFID_RegisterRt	    	: in std_logic_vector(4 downto 0);
        IDEX_RegisterRt	    	: in std_logic_vector(4 downto 0);
+       IDEX_WriteReg		: in std_logic_vector(4 downto 0);
        EXMEM_WriteReg		: in std_logic_vector(4 downto 0);
        IDEX_MEMRead		: in std_logic;
        Branch			: in std_logic;
@@ -85,6 +89,7 @@ component hazardDetection
        JR			: in std_logic;
        Stall_PC			: out std_logic;
        Stall_IFID     		: out std_logic;
+       Stall_IDEX     		: out std_logic;
        IFID_Flush    		: out std_logic;
        IDEX_Flush    		: out std_logic);
 end component;
@@ -161,6 +166,7 @@ begin
   reg31 <= "11111";
   controlOut(3) <= sLink;
   Branch <= sBranchOR;
+  JR <= JumpRetControl;
 
   --Branch operation check
   checkZero : process(sRs,sRt)
@@ -174,7 +180,7 @@ begin
 
   controlUnit: controlLogic port map(instruct31_26,sinstruct5_0,ALUOp,controlOut(2),controlOut(0),controlOut(1),MemRead,sRegDstControl,BranchControl,BneControl,JumpControl,JumpRetControl,sLink);
 
-  hazardUnit: hazardDetection port map(sinstruct25_21,sinstruct20_16,IDEX_RegisterRt,EXMEM_WriteReg,IDEX_MEMRead,sBranchOR,sBranch,JumpControl,sLink,JumpRetControl,Stall_PC,Stall_IFID,IFID_Flush,IDEX_Flush); --controlOut(3) = JAL
+  hazardUnit: hazardDetection port map(sinstruct25_21,sinstruct20_16,IDEX_RegisterRt,IDEX_WriteReg,EXMEM_WriteReg,IDEX_MEMRead,sBranchOR,sBranch,JumpControl,sLink,JumpRetControl,Stall_PC,Stall_IFID,Stall_IDEX,IFID_Flush,IDEX_Flush); --controlOut(3) = JAL
 
   branch_mux: mux2to1Nbit port map(sAdd4,sBranchAdd,sBranch,sBranchMux);
   jump_mux: mux2to1Nbit port map(sBranchMux,sJump,JumpControl,sJumpMux);

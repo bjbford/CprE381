@@ -20,11 +20,11 @@ use ieee.numeric_std.all;
 
 entity memoryStage is
   port(clk		: in std_logic;
-       ForwardStoreSel	: in std_logic;
-       Rt_Data      	: in std_logic_vector(31 downto 0);
+       WriteData      	: in std_logic_vector(31 downto 0);
        Add4In    	: in std_logic_vector(31 downto 0);
        controlIn	: in std_logic_vector(3 downto 0);
        ALUResult	: in std_logic_vector(31 downto 0);
+       MEMWB_ALUResult	: in std_logic_vector(31 downto 0);
        WriteRegIn	: in std_logic_vector(4 downto 0);
        ReadData    	: out std_logic_vector(31 downto 0);
        Add4Out    	: out std_logic_vector(31 downto 0);
@@ -53,7 +53,7 @@ component mux2to1Nbit
        o_Y          : out std_logic_vector(N-1 downto 0));
 end component;
 
-signal sAdd4,sALUResult,sWriteData	: std_logic_vector(31 downto 0);
+signal sAdd4,sALUResult	: std_logic_vector(31 downto 0);
 signal sWriteReg,sinstruct20_16,sinstruct25_21 : std_logic_vector(4 downto 0);
 signal truncate : std_logic_vector(9 downto 0);
 signal dmemAddr : natural range 0 to 1023;
@@ -71,7 +71,5 @@ begin
   sWriteReg <= WriteRegIn;
   WriteRegOut <= sWriteReg;
 
-  StoreForward_mux: mux2to1Nbit port map(Rt_Data,sALUResult,ForwardStoreSel,sWriteData);
-
-  mips_mem: mem port map(clk,dmemAddr,sWriteData,controlIn(1),ReadData);
+  mips_mem: mem port map(clk,dmemAddr,WriteData,sControl(1),ReadData);
 end structure;
