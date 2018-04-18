@@ -88,7 +88,7 @@ begin
     sinstruct25_21In <= "00000";
     sinstruct20_16In <= "00000";
     sMemReadIn <= '0';
-    sWE <= '1';
+    --sWE <= '1';
   else
     sadd4DataIn <= add4DataIn;
     sRsDataIn <= RsDataIn;
@@ -102,11 +102,11 @@ begin
     sinstruct25_21In <= instruct25_21In;
     sinstruct20_16In <= instruct20_16In;
     sMemReadIn <= MemReadIn;
-    sWE <= NOT Stall;
+    --sWE <= NOT Stall;
   end if;
   end process;
   -- always write unless stall is high
-  --sWE <= NOT Stall;
+  sWE <= NOT Stall;
   add4_reg: dffNbit port map(clk,RST,sWE,sadd4DataIn,add4DataOut);
   RsData_reg: dffNbit port map(clk,RST,sWE,sRsDataIn,RsDataOut);
   RtData_reg: dffNbit port map(clk,RST,sWE,sRtDataIn,RtDataOut);

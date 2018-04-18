@@ -47,8 +47,10 @@ entity executionStage is
        WriteRegOut	: out std_logic_vector(4 downto 0);
        instruct20_16Out	: out std_logic_vector(4 downto 0);
        controlOut	: out std_logic_vector(3 downto 0);
-       ForwardRs	: out std_logic; --Forward Rs mux selector
-       ForwardRt	: out std_logic; --Forward Rt mux selector
+       ForwardRs	: out std_logic; --Use forward mux data
+       ForwardRt	: out std_logic; --Use forward mux data
+       ForwardRsSel	: out std_logic; --Forward Rs mux selector
+       ForwardRtSel	: out std_logic; --Forward Rt mux selector
        Overflow		: out std_logic);
 end executionStage;
 
@@ -107,8 +109,10 @@ component forwardingUnit
        ForwardB       		: out std_logic; -- Use forward mux data
        ForwardASel		: out std_logic; --Forward A mux selector
        ForwardBSel		: out std_logic; --Forward B mux selector
-       ForwardRs		: out std_logic; --Forward Rs mux selector
-       ForwardRt		: out std_logic); --Forward Rt mux selector
+       ForwardRs		: out std_logic; --Use forward mux data
+       ForwardRt		: out std_logic; --Use forward mux data
+       ForwardRsSel		: out std_logic; --Forward Rs mux selector
+       ForwardRtSel		: out std_logic); --Forward Rt mux selector
 end component;
 
 signal AmuxOut,BmuxOut,hardcoded16,sAdd4,sForwardASource,sForwardBSource,Bnormal : std_logic_vector(31 downto 0);
@@ -134,7 +138,7 @@ begin
   inputALUSrc <= sALUSrc(1 downto 0);
   input3 <= "11";
 
-  forwardUnit: forwardingUnit port map(EXMEM_RegWrite,MEMWB_RegWrite,Branch,JR,IFID_RegisterRs,IFID_RegisterRt,instruct25_21In,sinstruct20_16,EXMEM_RegisterRt,EXMEM_WriteReg,MEMWB_WriteReg,sForwardA,sForwardB,sForwardASel,sForwardBSel,ForwardRs,ForwardRt);
+  forwardUnit: forwardingUnit port map(EXMEM_RegWrite,MEMWB_RegWrite,Branch,JR,IFID_RegisterRs,IFID_RegisterRt,instruct25_21In,sinstruct20_16,EXMEM_RegisterRt,EXMEM_WriteReg,MEMWB_WriteReg,sForwardA,sForwardB,sForwardASel,sForwardBSel,ForwardRs,ForwardRt,ForwardRsSel,ForwardRtSel);
   
   ForwardA_source: mux2to1Nbit port map(WB_WriteData,EXMEM_ALUResult,sForwardASel,sForwardASource);
   ForwardB_source: mux2to1Nbit port map(WB_WriteData,EXMEM_ALUResult,sForwardBSel,sForwardBSource);

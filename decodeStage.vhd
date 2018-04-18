@@ -31,9 +31,12 @@ entity decodeStage is
        IDEX_WriteReg	: in std_logic_vector(4 downto 0);
        EXMEM_WriteReg   : in std_logic_vector(4 downto 0);
        IDEX_MEMRead	: in std_logic;
+       ForwardRs	: in std_logic;
+       ForwardRt	: in std_logic;
        ForwardRsSel	: in std_logic;
        ForwardRtSel	: in std_logic;
        EXMEM_ALUResult  : in std_logic_vector(31 downto 0);
+       WB_WriteData  	: in std_logic_vector(31 downto 0);
        Stall_PC		: out std_logic;
        Stall_IFID     	: out std_logic;
        Stall_IDEX     	: out std_logic;
@@ -141,7 +144,7 @@ component mux2to1
        o_Y          : out std_logic);
 end component;
 
-signal sAdd4,sRt,sRs,sImmed,sBranchAdd,sBranchMux,sBranchShift,sJump,sJumpMux,sRsRegData,sRtRegData : std_logic_vector(31 downto 0);
+signal sAdd4,sRt,sRs,sImmed,sBranchAdd,sBranchMux,sBranchShift,sJump,sJumpMux,sRsRegData,sRtRegData,sRsForwardData,sRtForwardData : std_logic_vector(31 downto 0);
 signal instruct15_0 : std_logic_vector(15 downto 0);
 signal instruct31_26,sinstruct5_0 : std_logic_vector(5 downto 0);
 signal sinstruct25_21,sinstruct20_16,sinstruct15_11,reg31,sRegDst : std_logic_vector(4 downto 0);
@@ -193,8 +196,11 @@ begin
 
   regs: mipsRegister port map(WriteData,sinstruct20_16,sinstruct25_21,WriteRegIn,clk,RST,RegWrite,sRsRegData,sRtRegData);
   
-  RsForward_mux: mux2to1Nbit port map(sRsRegData,EXMEM_ALUResult,ForwardRsSel,sRs);
-  RtForward_mux: mux2to1Nbit port map(sRtRegData,EXMEM_ALUResult,ForwardRtSel,sRt);
+  RsForward_mux: mux2to1Nbit port map(sRsRegData,sRsForwardData,ForwardRs,sRs);
+  RtForward_mux: mux2to1Nbit port map(sRtRegData,sRtForwardData,ForwardRt,sRt);
+
+  RsForwardSel_mux: mux2to1Nbit port map(WB_WriteData,EXMEM_ALUResult,ForwardRsSel,sRsForwardData);
+  RtForwardSel_mux: mux2to1Nbit port map(WB_WriteData,EXMEM_ALUResult,ForwardRtSel,sRtForwardData);
  
   mips_signextend: mips_extender port map(instruct15_0,sImmed);
   instruct25_21 <= sinstruct25_21;

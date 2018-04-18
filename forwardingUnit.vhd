@@ -32,13 +32,15 @@ entity forwardingUnit is
        ForwardB       		: out std_logic; -- Use forward mux data
        ForwardASel		: out std_logic; --Forward A mux selector
        ForwardBSel		: out std_logic; --Forward B mux selector
-       ForwardRs		: out std_logic; --Forward Rs mux selector
-       ForwardRt		: out std_logic); --Forward Rt mux selector
+       ForwardRs		: out std_logic; --Use forward mux data
+       ForwardRt		: out std_logic; --Use forward mux data
+       ForwardRsSel		: out std_logic; --Forward Rs mux selector
+       ForwardRtSel		: out std_logic); --Forward Rt mux selector
 end forwardingUnit;
 
 architecture sel_when of forwardingUnit is
 
-signal sForwardASel,sForwardBSel,sForwardA,sForwardB,sForwardStore,sForwardRs,sForwardRt : std_logic := '0';
+signal sForwardASel,sForwardBSel,sForwardA,sForwardB,sForwardStore,sForwardRs,sForwardRt,sForwardRtSel,sForwardRsSel : std_logic := '0';
 
 begin
   process (EXMEM_RegWrite,MEMWB_RegWrite,Branch,JR,IFID_RegisterRs,IFID_RegisterRt,IDEX_RegisterRs,IDEX_RegisterRt,EXMEM_RegisterRt,EXMEM_WriteReg,MEMWB_WriteReg)
@@ -65,20 +67,24 @@ begin
     else
       sForwardB <= '0';
     end if;
-    --Branch Forwarding hazard with Rs
-    if((Branch = '1') and (MEMWB_WriteReg = IFID_RegisterRs)) then
+    -- Forward from EX/MEM to Rs mux in decode stage
+    if(((Branch = '1') or (JR = '1')) and (EXMEM_WriteReg /= "00000") and (EXMEM_WriteReg = IFID_RegisterRs)) then
+      sForwardRsSel <= '1';
+      sForwardRs <= '1';
+    elsif(((Branch = '1') or (JR = '1')) and (MEMWB_WriteReg /= "00000") and (MEMWB_WriteReg = IFID_RegisterRs)) then
+    -- Forward from MEM/WB to Rs mux in decode stage
+      sForwardRsSel <= '0';
       sForwardRs <= '1';
     else
       sForwardRs <= '0';
     end if;
-    --JR Forwarding hazard with Rs
-    if((JR = '1') and (EXMEM_WriteReg = IFID_RegisterRs)) then
-      sForwardRs <= '1';
-    else
-      sForwardRs <= '0';
-    end if;
-    --Branch Forwarding hazard with Rt
-    if((Branch = '1') and (MEMWB_WriteReg = IFID_RegisterRt)) then
+    -- Forward from EX/MEM to Rt mux in decode stage
+    if((Branch = '1') and (EXMEM_WriteReg /= "00000") and (EXMEM_WriteReg = IFID_RegisterRt)) then
+      sForwardRtSel <= '1';
+      sForwardRt <= '1';
+    elsif((Branch = '1') and (MEMWB_WriteReg /= "00000") and (MEMWB_WriteReg = IFID_RegisterRt)) then
+    -- Forward from MEM/WB to Rt mux in decode stage
+      sForwardRtSel <= '0';
       sForwardRt <= '1';
     else
       sForwardRt <= '0';
@@ -90,4 +96,6 @@ begin
   ForwardBSel <= sForwardBSel;
   ForwardRs <= sForwardRs;
   ForwardRt <= sForwardRt;
+  ForwardRsSel <= sForwardRsSel;
+  ForwardRtSel <= sForwardRtSel;
 end sel_when;

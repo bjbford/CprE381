@@ -44,7 +44,7 @@ begin
       Stall_PC <= '1';
       Stall_IFID <= '1';
       IDEX_Flush <= '1';
-    -- Jump or jal or jr detected
+    -- Jump or jal detected
     elsif((Jump = '1') or (JAL = '1')) then
       IFID_Flush <= '1';
     -- Jr detected and data hazard
@@ -53,9 +53,10 @@ begin
       Stall_IFID <= '1';
       IDEX_Flush <= '1';
     -- branch bubble insertion
-    elsif(Branch = '1' and ((EXMEM_WriteReg = IFID_RegisterRs) or (EXMEM_WriteReg = IFID_RegisterRt))) then
+    elsif(Branch = '1' and ((IDEX_WriteReg = IFID_RegisterRs) or (IDEX_WriteReg = IFID_RegisterRt)) and (IDEX_WriteReg /= "00000")) then
       Stall_PC <= '1';
       Stall_IFID <= '1';
+      --IFID_Flush <= '1';
       IDEX_Flush <= '1';
     -- Branch detected
     elsif(BranchTaken = '1') then

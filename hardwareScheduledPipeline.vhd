@@ -38,7 +38,7 @@ component pipeIFID
 end component;
 
 component pipeIDEX
-   port(clk			: in std_logic;
+  port(clk			: in std_logic;
        RST			: in std_logic;
        Stall			: in std_logic;
        Flush			: in std_logic;
@@ -124,9 +124,12 @@ component decodeStage
        IDEX_WriteReg	: in std_logic_vector(4 downto 0);
        EXMEM_WriteReg   : in std_logic_vector(4 downto 0);
        IDEX_MEMRead	: in std_logic;
+       ForwardRs	: in std_logic;
+       ForwardRt	: in std_logic;
        ForwardRsSel	: in std_logic;
        ForwardRtSel	: in std_logic;
        EXMEM_ALUResult  : in std_logic_vector(31 downto 0);
+       WB_WriteData  	: in std_logic_vector(31 downto 0);
        Stall_PC		: out std_logic;
        Stall_IFID     	: out std_logic;
        Stall_IDEX     	: out std_logic;
@@ -179,8 +182,10 @@ component executionStage
        WriteRegOut	: out std_logic_vector(4 downto 0);
        instruct20_16Out	: out std_logic_vector(4 downto 0);
        controlOut	: out std_logic_vector(3 downto 0);
-       ForwardRs	: out std_logic; --Forward Rs mux selector
-       ForwardRt	: out std_logic; --Forward Rt mux selector
+       ForwardRs	: out std_logic; --Use forward mux data
+       ForwardRt	: out std_logic; --Use forward mux data
+       ForwardRsSel	: out std_logic; --Forward Rs mux selector
+       ForwardRtSel	: out std_logic; --Forward Rt mux selector
        Overflow		: out std_logic);
 end component;
 
@@ -209,7 +214,7 @@ end component;
 
 signal IF_Add4,IFID_Add4,ID_Add4,IDEX_Add4,EX_Add4,EXMEM_Add4,MEM_Add4,MEMWB_Add4 : std_logic_vector(31 downto 0);
 signal sDatatoPC,IF_instruct,ID_instruct,WB_Data,sMemReg : std_logic_vector(31 downto 0);
-signal sJumpJrBranch,IFID_Flush,IDEX_Flush,Stall_PC,Stall_IFID,Stall_IDEX,IDEX_MemRead,ID_MemRead,ID_Branch,ID_JR,EX_ForwardStore,EX_ForwardRs,EX_ForwardRt : std_logic;
+signal sJumpJrBranch,IFID_Flush,IDEX_Flush,Stall_PC,Stall_IFID,Stall_IDEX,IDEX_MemRead,ID_MemRead,ID_Branch,ID_JR,EX_ForwardStore,EX_ForwardRs,EX_ForwardRt,EX_ForwardRsSel,EX_ForwardRtSel : std_logic;
 signal ID_RsData,ID_RtData,ID_Immed,EX_ALU,EX_Rt_Data,MEM_ALU,MEM_Data,MEMWB_Data 	: std_logic_vector(31 downto 0);
 signal IDEX_RsData,IDEX_Rt_Data,IDEX_Immed,EXMEM_ALU,EXMEM_Rt_Data,MEMWB_ALU 	: std_logic_vector(31 downto 0);
 signal ID_ALUOP,IDEX_ALUOP			: std_logic_vector(5 downto 0);
@@ -224,14 +229,14 @@ begin
   fetch: fetchStage port map(clk,RST,sJumpJrBranch,Stall_PC,sDatatoPC,IF_Add4,IF_instruct);
   IFID_regs: pipeIFID port map(clk,RST,IFID_Flush,Stall_IFID,IF_Add4,IF_instruct,IFID_Add4,ID_instruct);
 
-  decode: decodeStage port map(clk,RST,MEMWB_Control(2),MEMWB_WriteReg,WB_Data,ID_instruct,IFID_Add4,IDEX_instruct20_16,IDEX_WriteReg,EXMEM_WriteReg,IDEX_MemRead,EX_ForwardRs,EX_ForwardRt,EXMEM_ALU,Stall_PC,Stall_IFID,Stall_IDEX,IFID_Flush,IDEX_Flush,
+  decode: decodeStage port map(clk,RST,MEMWB_Control(2),MEMWB_WriteReg,WB_Data,ID_instruct,IFID_Add4,IDEX_instruct20_16,IDEX_WriteReg,EXMEM_WriteReg,IDEX_MemRead,EX_ForwardRs,EX_ForwardRt,EX_ForwardRsSel,EX_ForwardRtSel,EXMEM_ALU,WB_Data,Stall_PC,Stall_IFID,Stall_IDEX,IFID_Flush,IDEX_Flush,
 				ID_RsData,ID_RtData,ID_ALUOP,ID_Immed,ID_shamt,sDatatoPC,sJumpJrBranch,ID_Add4,ID_WriteReg,ID_instruct25_21,ID_instruct20_16,ID_instruct5_0,ID_control,ID_MemRead,ID_Branch,ID_JR);
 
   IDEX_regs: pipeIDEX port map(clk,RST,Stall_IDEX,IDEX_Flush,ID_Add4,ID_RsData,ID_RtData,ID_Immed,ID_ALUOP,ID_shamt,ID_WriteReg,ID_instruct25_21,ID_instruct20_16,ID_instruct5_0,ID_Control,ID_MemRead,
 				IDEX_Add4,IDEX_RsData,IDEX_Rt_Data,IDEX_Immed,IDEX_ALUOP,IDEX_shamt,IDEX_WriteReg,IDEX_instruct25_21,IDEX_instruct20_16,IDEX_instruct5_0,IDEX_Control,IDEX_MemRead);
 
   execute: executionStage port map(IDEX_RsData,IDEX_Rt_Data,IDEX_ALUOP,IDEX_Immed,IDEX_shamt,IDEX_Add4,IDEX_WriteReg,ID_instruct25_21,ID_instruct20_16,IDEX_instruct25_21,IDEX_instruct20_16,IDEX_instruct5_0,IDEX_Control,EXMEM_instruct20_16,EXMEM_WriteReg,MEMWB_WriteReg,
-					EXMEM_Control(2),MEMWB_Control(2),ID_Branch,ID_JR,EXMEM_ALU,WB_Data,EX_ALU,EX_Rt_Data,EX_Add4,EX_WriteReg,EX_instruct20_16,EX_Control,EX_ForwardRs,EX_ForwardRt,Overflow);
+					EXMEM_Control(2),MEMWB_Control(2),ID_Branch,ID_JR,EXMEM_ALU,WB_Data,EX_ALU,EX_Rt_Data,EX_Add4,EX_WriteReg,EX_instruct20_16,EX_Control,EX_ForwardRs,EX_ForwardRt,EX_ForwardRsSel,EX_ForwardRtSel,Overflow);
 
   EXMEM_regs: pipeEXMEM port map(clk,RST,Stall_EXMEM,EX_Add4,EX_ALU,EX_Rt_Data,EX_WriteReg,EX_instruct20_16,EX_Control,
 					EXMEM_Add4,EXMEM_ALU,EXMEM_Rt_Data,EXMEM_WriteReg,EXMEM_instruct20_16,EXMEM_Control);
